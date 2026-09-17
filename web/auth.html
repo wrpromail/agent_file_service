@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>统一登录 · Agent File Service</title>
+  <link rel="stylesheet" href="/shared/styles/app.css?v=20260820a" />
+  <script src="/shared/js/uc-strip.js?v=20260820a"></script>
+</head>
+<body>
+  <div class="app" hidden>
+    <main class="page" id="pageRoot"></main>
+  </div>
+  <script type="module">
+    import { runUcGate } from "/shared/js/uc-gate.js?v=20260820a";
+    await runUcGate();
+  </script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+[project]
+name = "file-service"
+version = "0.1.0"
+description = "Multi-agent file intelligence processing service"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "sqlalchemy",
+    "psycopg[binary]",
+    "pydantic",
+    "pydantic-settings",
+    "python-multipart",
+    "boto3",
+    "celery",
+    "redis",
+    "httpx",
+    "requests",
+    "pyyaml",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "ruff",
+]
+metadata = [
+    "pypdf",
+    "python-docx",
+    "openpyxl",
+    "xlrd",  # 旧版 .xls 元数据（sheet 数/维度）
+    "pillow",
+]
+parsers = [
+    "pypdf",
+    "pdfplumber",
+    "python-docx",
+    "openpyxl",
+    "xlrd",  # 旧版 .xls 元数据（sheet 数/维度）
+    "pillow",
+    # 文件 → Markdown（xls/xlsx 需对应 extra；office/pdf 一并装上便于智能体通用消费）
+    "markitdown[xls,xlsx,docx,pptx,pdf]",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"

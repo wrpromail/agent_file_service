@@ -1,0 +1,15 @@
+{
+  "name": "agent-file-service-web",
+  "private": true,
+  "description": "ESLint tooling for Agent File Service dev-console static UI (web/)",
+  "type": "module",
+  "scripts": {
+    "lint": "eslint --config eslint.config.mjs \"web/shared/**/*.js\" \"web/shared/config.js\"",
+    "lint:fix": "eslint --config eslint.config.mjs \"web/shared/**/*.js\" \"web/shared/config.js\" --fix"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.8.0",
+    "globals": "^17.9.0"
+  }
+}

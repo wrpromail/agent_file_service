@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>调试 · Agent File Service</title>
+  <link rel="stylesheet" href="/shared/styles/app.css?v=20260820a" />
+  <link rel="stylesheet" href="/shared/styles/pages.css?v=20260820a" />
+  <script src="/shared/js/uc-strip.js?v=20260820a"></script>
+</head>
+<body>
+  <div class="app">
+    <main class="page" id="pageRoot"></main>
+  </div>
+  <script type="module">
+    import { runUcGate } from "/shared/js/uc-gate.js?v=20260820a";
+    import { mountChrome } from "/shared/js/chrome.js?v=20260820a";
+    import { initPlayground } from "/shared/js/pages/playground-page.js?v=20260820a";
+    if (await runUcGate()) {
+      mountChrome("playground");
+      initPlayground();
+    }
+  </script>
+</body>
+</html>

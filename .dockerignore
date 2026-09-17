@@ -1,0 +1,39 @@
+# Build context hygiene. Keep web/ (dev console) — never ignore it.
+# web/ is COPY'd into the image for intranet offline deploy.
+
+.git
+.github
+.venv
+venv
+env
+__pycache__
+*.py[cod]
+.pytest_cache
+.ruff_cache
+.mypy_cache
+.coverage
+htmlcov
+.agent
+.idea
+.vscode
+
+# Local data & secrets
+data
+.env
+.env.*
+!.env.example
+
+# Frontend tooling (source web/ is still included)
+node_modules
+
+# Build / dist artifacts
+dist
+*.egg-info
+.eggs
+
+# Tests not needed in runtime image
+tests
+sample
+
+# Docs optional for runtime (keep README for hatch if needed — already copied selectively)
+# Do NOT ignore: app, web, config.yaml, scripts, pyproject.toml, Dockerfile

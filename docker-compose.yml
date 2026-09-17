@@ -1,0 +1,118 @@
+# 本地开发（lite）：SQLite + 本地盘 + Valkey + api + worker
+# 默认文件：docker compose up -d --build
+#
+# 本文件仅用于本地启动。交付用 compose 由交付流程单独生成，不在本仓库。
+#
+# 特点：挂载 ./app，API uvicorn --reload；改 worker 解析后需 restart worker。
+# LiteLLM：默认走宿主机 http://host.docker.internal:4000。
+# 若代理在其它 compose 网络，自行设置 LITELLM_BASE_URL 并让容器加入该网络。
+#
+# 验收：
+#   curl -s http://127.0.0.1:8020/health
+#   curl -s -X POST http://127.0.0.1:8020/v1/files \
+#     -H "Authorization: Bearer dev-api-key" -H "X-Tenant-Id: dev" \
+#     -F "file=@sample/sample.zip"
+
+x-common-env: &common-env
+  API_KEYS: ${API_KEYS:-dev-api-key}
+  ALLOWED_TENANT_IDS: ${ALLOWED_TENANT_IDS:-}
+  API_KEY_TENANT_MAP: ${API_KEY_TENANT_MAP:-}
+  LITELLM_API_KEY: ${LITELLM_API_KEY:-sk-dev-key}
+  MINERU_API_TOKEN: ${MINERU_API_TOKEN:-}
+  LITELLM_BASE_URL: ${LITELLM_BASE_URL:-http://host.docker.internal:4000}
+  CONFIG_PATH: /app/config.yaml
+  PARSE_TASK_BACKEND: celery
+  DEPLOY_MODE: "lite"
+  DATABASE_URL: "sqlite:////data/db/file_service.db"
+  STORAGE_BACKEND: "local"
+  LOCAL_STORAGE_PATH: "/data"
+  VALKEY_URL: redis://valkey:6379/0
+  CELERY_BROKER_URL: redis://valkey:6379/0
+  CELERY_RESULT_BACKEND: redis://valkey:6379/1
+  STARTUP_DEPENDENCY_CHECK: ${STARTUP_DEPENDENCY_CHECK:-false}
+  DEV_CONSOLE_ENABLED: ${DEV_CONSOLE_ENABLED:-true}
+  # UC：只认 env。空则走代码默认关闸；别名便于与工作台共用配置
+  FILE_SERVICE_UC_ENABLED: ${FILE_SERVICE_UC_ENABLED:-}
+  FILE_SERVICE_UC_MOCK: ${FILE_SERVICE_UC_MOCK:-}
+  FILE_SERVICE_UC_BASE_URL: ${FILE_SERVICE_UC_BASE_URL:-}
+  FILE_SERVICE_UC_SESSION_SECRET: ${FILE_SERVICE_UC_SESSION_SECRET:-}
+  FILE_SERVICE_UC_SESSION_TTL_SECONDS: ${FILE_SERVICE_UC_SESSION_TTL_SECONDS:-}
+  DASHBOARD_UC_ENABLED: ${DASHBOARD_UC_ENABLED:-}
+  DASHBOARD_UC_MOCK: ${DASHBOARD_UC_MOCK:-}
+  DASHBOARD_UC_BASE_URL: ${DASHBOARD_UC_BASE_URL:-}
+  DASHBOARD_UC_SESSION_SECRET: ${DASHBOARD_UC_SESSION_SECRET:-}
+
+x-dev-volumes: &dev-volumes
+  - file_service_data:/data
+  - ./config.yaml:/app/config.yaml:ro
+  - ./app:/app/app
+  - ./web:/app/web
+
+services:
+  valkey:
+    image: valkey/valkey:9.1.0-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      target: api
+    image: ${API_IMAGE:-agent-file-service-api:local}
+    restart: unless-stopped
+    environment:
+      <<: *common-env
+      SERVICE_ROLE: api
+    ports:
+      - "8020:8000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes: *dev-volumes
+    depends_on:
+      valkey:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    command:
+      [
+        "uvicorn",
+        "app.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+        "--reload",
+        "--reload-dir",
+        "/app/app",
+        "--reload-dir",
+        "/app/web",
+      ]
+
+  worker:
+    build:
+      context: .
+      target: worker
+    image: ${WORKER_IMAGE:-agent-file-service-worker:local}
+    restart: unless-stopped
+    environment:
+      <<: *common-env
+      SERVICE_ROLE: worker
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes: *dev-volumes
+    depends_on:
+      valkey:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+
+volumes:
+  file_service_data:

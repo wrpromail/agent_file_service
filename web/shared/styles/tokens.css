@@ -1,0 +1,66 @@
+/* Design tokens — light control plane */
+:root {
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-pill: 999px;
+
+  --btn-h: 34px;
+  --btn-h-sm: 28px;
+  --control-h: 34px;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+
+  --biz-fs-meta: 0.75rem;
+  --biz-fs-body: 0.8125rem;
+  --biz-fs-title: 1.125rem;
+  --biz-lh-tight: 1.3;
+  --biz-lh-body: 1.5;
+
+  --color-bg: #f4f6fa;
+  --color-surface: #ffffff;
+  --color-surface-2: #f8fafc;
+  --color-text: #1f2937;
+  --color-text-strong: #0f172a;
+  --color-text-muted: #475569;
+  --color-text-subtle: #64748b;
+  --color-border: #e8ecf1;
+  --color-border-control: #d1d5db;
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-primary-soft: rgba(37, 99, 235, 0.08);
+  --color-primary-soft-2: rgba(37, 99, 235, 0.14);
+  --color-focus: #60a5fa;
+  --color-focus-ring: rgba(59, 130, 246, 0.16);
+  --color-danger: #b91c1c;
+  --color-danger-border: #fecaca;
+  --color-danger-bg: #fef2f2;
+  --color-success: #047857;
+  --color-success-bg: #ecfdf5;
+  --color-success-border: #a7f3d0;
+  --color-warn: #b45309;
+  --color-warn-bg: #fffbeb;
+  --color-warn-border: #fde68a;
+
+  --shadow-l1: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-l2: 0 1px 3px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.03);
+  --shadow-l2h: 0 4px 12px rgba(15, 23, 42, 0.08);
+  --shadow-input: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-modal: 0 20px 50px rgba(15, 23, 42, 0.16);
+
+  --font-primary: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei",
+    "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Courier New", monospace;
+
+  --header-h: 52px;
+  --page-max: 1200px;
+  --split-side: min(380px, 38vw);
+}

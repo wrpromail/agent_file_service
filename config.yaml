@@ -1,0 +1,198 @@
+# =============================================================================
+# File Service 服务配置（非密钥）
+# -----------------------------------------------------------------------------
+# - 密钥 / 连接串走环境变量或 .env（API_KEYS、ALLOWED_TENANT_IDS、LITELLM_API_KEY、数据库密码等）
+# - API_KEYS 空时启动自动生成；鉴权不可关闭。ALLOWED_TENANT_IDS 空=调用方自报租户
+# - 本文件：服务行为、解析器、分类型自动解析规则、多模态默认提示词
+# - Docker：挂载到容器内 /app/config.yaml（见 docker-compose.yml）
+# - 覆盖路径：环境变量 CONFIG_PATH
+# =============================================================================
+
+app_name: file-service
+debug: false
+
+# 开发控制台（静态 MPA）。本地默认开；交付请用环境变量 DEV_CONSOLE_ENABLED=false（deploy compose 已默认关）
+# 开启时可用 DEV_CONSOLE_API_TOKEN / DEV_CONSOLE_TENANT_ID 在入口注入 web/shared/config.js（勿把生产密钥打进镜像层）
+# UC 工作台闸门只认环境变量 FILE_SERVICE_UC_*（及 DASHBOARD_UC_* 别名），不读本文件
+dev_console_enabled: true
+
+# API 启动时检查已配置的外部依赖是否可达（LiteLLM、DB；celery 时 Valkey；layout=mineru 时 MinerU）
+# 默认不阻塞启动（strict=false），结果写入日志且体现在 GET /health
+startup_dependency_check: true
+startup_dependency_check_timeout: 5
+startup_dependency_check_strict: false
+
+# 单文件上传硬上限（字节）；0 = 不限制
+# 超出直接拒绝入库（HTTP 413）。与下方 auto_parse.*.max_bytes 不同：
+#   - max_upload_bytes：能否上传
+#   - auto_parse.*.max_bytes：能否自动解析（仍可上传后手动 POST /parse）
+max_upload_bytes: 20971520    # 20 MiB
+
+# 批量 API 单次最多 reference_id 数
+batch_max_ids: 20
+
+# 租户配额（0 = 不限制）
+quota_max_files_per_tenant: 0
+quota_max_bytes_per_tenant: 0
+quota_max_concurrent_parses_per_tenant: 0
+
+# from-url 上传（SSRF 防护默认开启；可选 host 白名单）
+from_url_enabled: true
+from_url_timeout: 60.0
+from_url_allowed_hosts: ""
+
+# 压缩包（zip / tar / tar.gz）：上传后同步解压可识别子文件（≤ max 个）
+# 过多则只存父包；archive_password 仅 zip，不落库
+archive_expand_enabled: true
+archive_max_expand_files: 8
+archive_max_member_bytes: 20971520   # 20 MiB / 成员
+archive_max_total_bytes: 83886080    # 80 MiB 合计
+# 空则用代码默认扩展名列表
+archive_supported_extensions: ""
+
+# 解析调度：false = 后台任务；true = 请求内同步（测试常用）
+parse_sync: false
+# 异步后端：local = API 进程内 BackgroundTasks（本机 ./scripts/dev.sh）；
+# celery = 投递到 worker（docker compose 默认）。Docker 环境变量会覆盖为 celery。
+parse_task_backend: local
+
+# 正文识别后端（历史字段名 layout_parser_*；产物写入 profile=layout = 基础正文 Markdown）
+# markitdown | simple | mineru | vision-pages
+layout_parser_name: markitdown
+layout_parser_version: "0.2.0"
+
+# 旧版 Office（doc/ppt/xls）→ OOXML（LibreOffice headless）
+# 用户句柄仍指向原文件；转换结果默认缓存为 derivatives/，不建第二引用
+legacy_office_enabled: true
+legacy_office_cache_enabled: true
+legacy_office_timeout: 300
+legacy_office_binary: ""              # 空则 PATH 查找 soffice / libreoffice
+legacy_office_converter_version: "0.1.0"
+
+# MinerU（layout_parser_name=mineru 时）
+mineru_base_url: https://mineru.net/api/v4
+mineru_poll_interval: 5
+mineru_timeout: 900
+mineru_work_dir: /tmp/file-service-mineru
+# 出站重试（0 = 继承下方 outbound_http_*；默认 5 次总尝试）
+mineru_max_attempts: 5
+
+# vision-pages 正文识别（layout_parser_name=vision-pages 时启用）
+# PDF / Office / 表格 → 页图 → LiteLLM 多模态 → 正文 Markdown（非版面引擎）
+# 模型默认 kimi-k2.6:cloud（与图片 vision_model 独立）
+vision_pages_model: "kimi-k2.6:cloud"
+vision_pages_parser_name: vision-pages
+vision_pages_parser_version: "0.1.0"
+vision_pages_max_pages: 20
+vision_pages_render_scale: 2.0
+vision_pages_max_edge_px: 1600
+vision_pages_timeout: 180
+vision_pages_work_dir: /tmp/file-service-vision-pages
+vision_pages_fail_fast: false
+vision_pages_concurrency: 3          # 多页并行识别（1=串行）
+vision_pages_page_prompt: |
+  请将本页图像中的可见文本还原为结构清晰的 Markdown 文档（保留标题、列表、表格与阅读顺序）。仅描述本页内容，不要编造不存在的文字或数字。无文字则用一两句客观描述画面。直接输出 Markdown 正文，不要前言后语。
+
+# 外部 HTTP 出站默认重试（LiteLLM / 其它集成共用；见 app/integrations/http）
+# max_attempts = 总尝试次数（含首次）；1 = 不重试
+outbound_http_max_attempts: 3
+outbound_http_backoff_base: 1.0
+outbound_http_backoff_max: 30.0
+outbound_http_rate_limit_wait: 65.0   # 遇 429 等待秒数
+
+# LiteLLM 代理（视觉 / 音频 / 视频多模态）
+# api_key 请用环境变量 LITELLM_API_KEY
+litellm_base_url: http://localhost:4000
+# 0 = 继承 outbound_http_max_attempts
+litellm_max_attempts: 0
+
+# 图片视觉识别（profile=deep；上传自动识别时使用）
+# 本地经 LiteLLM 代理 ollama cloud：qwen3.5:cloud
+vision_model: "qwen3.5:cloud"
+vision_parser_name: qwen-vision
+vision_parser_version: "0.1.0"
+vision_timeout: 120
+# 自动识别默认用户提示词：引导模型输出 Markdown，还原媒体中文本结构
+# （可被 custom-parse 的用户指令覆盖）
+vision_default_prompt: |
+  请将图片中的可见文本还原为结构清晰的 Markdown 文档（保留标题、列表、表格与阅读顺序）；必要时用一两句话客观描述画面。无文字则仅描述画面。
+
+# 音频 layout / custom-parse（模型需支持 input_audio）
+# LiteLLM 上的名称是 gemini-flash-3.5（不是 gemini-3.5-flash）
+# qwen3.5:cloud 当前不接受 input_audio
+audio_model: "gemini-flash-3.5"
+audio_parser_name: litellm-audio
+audio_parser_version: "0.1.0"
+audio_timeout: 180
+audio_default_prompt: |
+  请将音频内容整理为 Markdown 文档：
+  ## 概要
+  （一两句主题；无明显语音可省略本节）
+  ## 转写
+  完整转写语音；可按说话人或自然段落分段。若无明显语音请明确说明。
+
+# 视频 layout / custom-parse（模型需支持 video/file 多模态）
+# 当前测试：gemini-flash-3.5；内网后续可切换为 qwen3-omni 等
+video_model: "gemini-flash-3.5"
+video_parser_name: litellm-video
+video_parser_version: "0.1.0"
+video_timeout: 300
+video_default_prompt: |
+  请将视频内容整理为 Markdown 文档：
+  ## 概述
+  画面与情节简要说明
+  ## 画面要点
+  关键视觉信息（列表）
+  ## 语音与字幕
+  转写或概括语音/字幕中的文本；可按时间分段
+  若无明显有效内容请明确说明。
+
+# -----------------------------------------------------------------------------
+# 自动解析策略（上传 auto_parse=true 时生效；显式 POST /parse 与 custom-parse 不受限）
+# max_* 为 0 表示不限制。profile：layout | deep | ocr | tables
+# 图片默认 profile=layout（引擎为视觉模型）；spreadsheet.also_tables 并行 tables
+# -----------------------------------------------------------------------------
+auto_parse:
+  pdf:
+    enabled: true
+    profile: layout
+    max_pages: 100
+    max_bytes: 31457280   # 30 MiB
+  spreadsheet:
+    enabled: true
+    profile: layout
+    max_sheets: 50
+    max_bytes: 20971520   # 20 MiB
+    also_tables: true     # also enqueue profile=tables (headers+rows JSON)
+    tables_max_rows: 5000
+    tables_max_cols: 64
+  office:
+    enabled: true
+    profile: layout
+    max_bytes: 20971520
+  text:
+    enabled: true
+    profile: layout
+    max_bytes: 5242880    # 5 MiB
+  image:
+    enabled: true         # 开启图片自动识别（视觉模型 OCR+简述）
+    # 使用 layout：常见调用方只拉取 profile=layout；图片 layout 实际走视觉模型
+    profile: layout
+    max_bytes: 10485760   # 10 MiB
+  audio:
+    enabled: true         # 开启音频自动转写（layout + audio_default_prompt）
+    profile: layout       # 调用方通常只读 layout
+    max_bytes: 52428800   # 50 MiB
+  video:
+    enabled: true         # 开启视频自动理解（layout + video_default_prompt）
+    profile: layout       # 调用方通常只读 layout
+    max_bytes: 104857600  # 100 MiB（大文件建议后续走 Files API）
+  unknown:
+    enabled: true
+    profile: layout
+    max_bytes: 20971520
+
+# 进程内定时 GC
+gc_beat_enabled: true
+gc_expire_interval_seconds: 3600
+gc_blob_interval_seconds: 86400

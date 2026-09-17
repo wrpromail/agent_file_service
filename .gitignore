@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+.Python
+.agent/
+
+# Virtual env
+.venv/
+venv/
+env/
+
+# Test / tooling
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+node_modules/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+.tox/
+.nox/
+.hypothesis/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+last_image_tag.txt
+last_image_tar.txt
+
+# MinerU / local temp workdirs
+/tmp/
+tmp/
+.file-service-mineru/
+file-service-mineru/
+
+# Local runtime data (if ever written under repo)
+data/
+storage/
+*.log
+prod/
