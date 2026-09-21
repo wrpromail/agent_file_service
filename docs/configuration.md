@@ -380,6 +380,7 @@ docker compose up -d --force-recreate
 ## 本地开发
 
 ```bash
+conda activate dev2609        # Python >= 3.14；脚本不自动 source .venv
 cp .env.example .env          # 密钥
 # 编辑 config.yaml            # 模型、自动解析规则等
 pip install -e ".[dev,parsers]"

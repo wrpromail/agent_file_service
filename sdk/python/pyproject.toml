@@ -1,0 +1,27 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "file-service-client"
+version = "0.1.0"
+description = "Lightweight Python client for Agent File Service"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "httpx",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "respx",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["fileservice_client"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

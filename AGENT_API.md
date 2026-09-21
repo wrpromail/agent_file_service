@@ -39,6 +39,20 @@ X-Tenant-Id: <TENANT_ID>
 
 联调时向部署方索取：`BASE_URL`、`API_KEY`、允许的 `TENANT_ID`。本地示例常用 `dev-api-key` + 自选租户（以实际环境为准）。
 
+智能体后端推荐用 Python SDK（`sdk/python`），鉴权头与等待 layout 已封装：
+
+```python
+from fileservice_client import init, get_client
+
+init(base_url="http://localhost:8020", api_key="dev-api-key", tenant_id="agent-system-a")
+fs = get_client()
+uploaded = fs.upload("invoice.png", session_id="sess-001")
+content = fs.wait_for_content(uploaded["reference_id"], timeout=120)
+markdown = content.markdown
+```
+
+安装与方法面见 [sdk/python/README.md](./sdk/python/README.md)。服务**不**登记 webhook；`wait_for_content` 在客户端轮询 `GET .../content`（ETag）。
+
 ```bash
 export BASE=http://localhost:8020
 export KEY=dev-api-key

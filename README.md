@@ -36,7 +36,10 @@
 
 ### 本地开发（推荐）
 
+本机用 **Python >= 3.14**（例如 conda 环境 `dev2609`）。脚本不自动激活仓库内 `.venv`。
+
 ```bash
+conda activate dev2609
 cp .env.example .env          # 密钥与部署连接；仅首次
 # 编辑 config.yaml            # 服务行为、分类型自动解析、视觉模型等
 pip install -e ".[dev,parsers]"
@@ -225,7 +228,11 @@ ruff check app tests scripts
 ## 测试
 
 ```bash
-python3 -m pytest tests/ -v
+conda activate dev2609
+python -m pytest tests/ -q
+# Python SDK（respx mock，不启服务）
+pip install -e "./sdk/python[dev]"
+python -m pytest sdk/python/tests -q
 ```
 
 - 单元测试：SQLite 内存库 + 内存对象存储（layout 强制 `simple`）
@@ -345,7 +352,7 @@ Office/表格依赖 LibreOffice（`soffice`）；纯 PDF 仅需 pypdfium2。
 
 ## 智能体集成
 
-REST 与 MCP 接入说明：[docs/agent-integration.md](./docs/agent-integration.md)。
+智能体后端请用 Python SDK（协议封装 + `wait_for_content` 等待异步 layout），见 [sdk/python/README.md](./sdk/python/README.md)。REST 与 MCP 约定：[docs/agent-integration.md](./docs/agent-integration.md) · 联调手册：[AGENT_API.md](./AGENT_API.md)。
 
 **进会话**（写入 Agent workspace）不在本服务内完成，两条路径：
 

@@ -238,9 +238,24 @@ curl -H "Authorization: Bearer dev-api-key" \
 
 返回 `Content-Disposition: attachment`，body 为对象存储中的原始 blob。
 
+## Python SDK
+
+智能体后端 / MCP 工具侧用 `fileservice_client`（本仓 `sdk/python`），对齐 data_gate 的轻量 httpx 客户端：鉴权头、`upload`、`content`、`wait_for_content`（ETag 轮询直到 layout ready）。服务端不推送、不登记 callback URL。
+
+```python
+from fileservice_client import init, get_client
+
+init(base_url="http://localhost:8020", api_key="dev-api-key", tenant_id="dev-user")
+fs = get_client()
+ref = fs.upload("scan.png", session_id="thread-1")["reference_id"]
+md = fs.wait_for_content(ref).markdown
+```
+
+安装与方法面：[sdk/python/README.md](../sdk/python/README.md)。
+
 ## MCP 封装（可选）
 
-本仓只提供 REST。调用方可把同一组能力封成 MCP 工具，例如：
+本仓只提供 REST。调用方用 SDK 把同一组能力封成 MCP 工具，例如：
 
 | MCP 工具 | 对应 REST |
 |----------|-----------|

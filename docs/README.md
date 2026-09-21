@@ -74,6 +74,7 @@
 
 ```bash
 # 本地 lite（推荐）：SQLite + 本地盘 + 单进程
+conda activate dev2609
 pip install -e ".[dev,parsers]"
 ./scripts/dev.sh
 
