@@ -19,7 +19,7 @@
 | 镜像 | 职责 | 备注 |
 |------|------|------|
 | **api** | HTTP API、上传/下载/查 content、入队 | 无 LibreOffice；启动时 `create_all` 建缺失表 |
-| **worker** | 异步解析、旧式 Office 转换 | 含 LibreOffice；依赖队列与共享数据 |
+| **worker** | 异步解析、旧式 Office、file_convert 兼容转换（含 Markdown→PDF） | 含 LibreOffice；依赖队列与共享数据 |
 | **valkey** | Celery 消息队列 | Docker 栈默认启用 |
 
 ### 1.2 部署模式与 Compose
@@ -274,7 +274,14 @@ curl -s -X POST http://localhost:8020/v1/files \
 
 # 无 token 应 401
 curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8020/v1/files
+
+# file_convert 兼容层无 token 应 401
+curl -s -o /dev/null -w "%{http_code}\n" -X POST http://localhost:8020/convert-office \
+  -H "Content-Type: application/json" \
+  -d '{"file_url":"http://example.com/a.docx","file_format":"docx"}'
 ```
+
+联调路径与 JSON 见 [AGENT_API.md §5.8](./AGENT_API.md)。
 
 ### 5.2.1 压缩包展开冒烟（可选）
 

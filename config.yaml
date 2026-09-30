@@ -41,6 +41,14 @@ from_url_enabled: true
 from_url_timeout: 60.0
 from_url_allowed_hosts: ""
 
+# file_convert 兼容层（路径与 JSON 对齐旧服务；须带 Bearer + X-Tenant-Id）
+# 仅兼容层拉 file_url 时允许私网；POST /v1/files/from-url 仍走 SSRF
+convert_compat_allow_private_urls: true
+convert_compat_timeout: 300.0
+convert_compat_max_inline_bytes: 20971520   # 20 MiB
+convert_compat_public_base_url: ""
+convert_compat_session_id: convert-compat
+
 # 压缩包（zip / tar / tar.gz）：上传后同步解压可识别子文件（≤ max 个）
 # 过多则只存父包；archive_password 仅 zip，不落库
 archive_expand_enabled: true

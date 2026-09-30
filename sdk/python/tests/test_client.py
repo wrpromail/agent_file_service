@@ -88,6 +88,28 @@ class TestErrors:
             fs.parse(REF)
 
 
+class TestConvertCompat:
+    @respx.mock
+    def test_convert_office(self, fs: FileServiceClient):
+        route = respx.post(f"{BASE}/convert-office").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "markdown_content": "# x",
+                    "task_id": "t",
+                    "file_format": "docx",
+                    "processing_time": 0.1,
+                    "message": "ok",
+                    "cache_hit": False,
+                },
+            )
+        )
+        with fs:
+            data = fs.convert_office("http://example.com/a.docx", "docx")
+        assert data["markdown_content"] == "# x"
+        assert route.called
+
+
 class TestUploadAndContent:
     @respx.mock
     def test_upload_bytes(self, fs: FileServiceClient):

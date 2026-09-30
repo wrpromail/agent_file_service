@@ -61,9 +61,14 @@ markdown = content.markdown  # 图片默认走视觉模型 → Markdown
 | `download(id)` | `GET /v1/files/{id}/download` → `bytes` |
 | `delete(id)` | `DELETE /v1/files/{id}` |
 | `batch_status(ids)` / `batch_content(ids)` | 批量 |
+| `convert_office(url, format)` | `POST /convert-office`（file_convert 兼容） |
+| `convert_markdown(md)` | `POST /convert` |
+| `extract_text(url, format)` | `POST /extract-text` |
+| `convert_to_images(...)` | `POST /convert-to-images` |
+| `generate_excel(payload)` | `POST /generate-excel` |
 
 `wait_for_content`：`ready=true` 返回 `ContentResult`；`status=failed` 抛 `FileServiceParseError`；超时抛 `FileServiceTimeoutError`。指数退避（默认 0.5s 起，上限 5s）。
 
 未就绪是 HTTP 200 + `ready=false`，不是 4xx。不要把「解析中」当错误码。
 
-MCP 工具仍由调用方封装（`upload_file_base64` / `get_file_content` 等），本仓不跑 MCP server。
+服务端 `/mcp` 提供 **file_convert 兼容工具**（`convert_office_to_markdown` 等），请求须带与 REST 相同的 Bearer + `X-Tenant-Id`。文件中台主路径（upload / content / parse）的 MCP 工具由调用方用本 SDK 封装（`upload_file_base64` / `get_file_content` 等）。

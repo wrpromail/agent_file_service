@@ -41,8 +41,9 @@
 | ETag | status/content `If-None-Match` |
 | archive members | `list_archive_members` |
 | 音视频 L0 | `AudioMetadataExtractor` / `VideoMetadataExtractor` |
+| file_convert 兼容层 | `app/api/routes/convert.py` + `convert_service`；同步 HTTP，产物入库为 `FileReference`；Docker 下 Celery `.get()` 等 worker |
 
-**上传 vs 识别**：API 上传层无 MIME 白名单；分类覆盖 pdf/image/office/spreadsheet/audio/video 等；旧式 Office 见 [legacy-office.md](./legacy-office.md)。格式矩阵见 [product-principles.md](./product-principles.md)。
+**上传 vs 识别**：API 上传层无 MIME 白名单；分类覆盖 pdf/image/office/spreadsheet/audio/video 等；旧式 Office 见 [legacy-office.md](./legacy-office.md)。格式矩阵见 [product-principles.md](./product-principles.md)。兼容转换路径见 [AGENT_API.md §5.8](../AGENT_API.md)。
 
 ## 处理工厂（当前架构核心）
 

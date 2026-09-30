@@ -1,6 +1,6 @@
 # 实现状态看板
 
-> 最后更新：**2026-08-21**  
+> 最后更新：**2026-09-30**  
 > 对照：[design.md](../design.md) · [product-principles.md](./product-principles.md) · [archive-expand.md](./archive-expand.md) · [processing-factory.md](./processing-factory.md)
 
 状态图例：✅ 完成 · 🟡 进行中 · ⚪ 未开始
@@ -31,7 +31,7 @@ uv run pytest -q
 python3 -m pytest tests/ -v
 ```
 
-最近全量（2026-08-03）：**203 passed，2 skipped，0 failed**（对齐 `profile=tables` 文档与 API 用例后）。
+最近全量（2026-09-30）：**257 passed，2 skipped，0 failed**（含 file_convert 兼容层）。
 
 | 测试文件 | 覆盖 |
 |----------|------|
@@ -68,6 +68,7 @@ python3 -m pytest tests/ -v
 | `test_metrics_endpoint.py` | `GET /metrics` |
 | `test_valkey.py` | Valkey 配置字段 |
 | `test_uc_auth.py` | UC HMAC 票 / MOCK 换票 / jti 互斥 / HTTP 闸门（不打真 UC） |
+| `test_convert_compat.py` | **file_convert 兼容层**：鉴权、office→md 缓存、excel、md→pdf、抽文本、转图、cache/clear |
 
 单元测试默认：SQLite 内存库 + `InMemoryStorageBackend`；需真实 Valkey/LiteLLM 的用例会 skip。
 
@@ -105,6 +106,15 @@ python3 -m pytest tests/ -v
 | `app/core/metrics.py` / `audit.py` | ✅ | Prometheus 计数 + 结构化审计 |
 | `app/uc/` | ✅ | UC 工作台跳转：env 配置、HMAC 票、token-auth、进程内 jti、FastAPI 闸门 |
 | `app/services/url_import_service.py` | ✅ | from-url + SSRF |
+| `app/services/convert_service.py` | ✅ | **file_convert 兼容层**（同步转换，产物入库为引用） |
+| `app/api/routes/convert.py` | ✅ | `/convert*` `/extract-text` `/generate-excel` `/cache/*` |
+| `app/parsers/markdown_pdf.py` | ✅ | Markdown → HTML → LibreOffice PDF |
+| `app/mcp_convert.py` | ✅ | `/mcp` Streamable HTTP（工具名对齐 file_convert） |
+| `app/tasks/convert_tasks.py` | ✅ | Docker 下转换在 worker 执行，API 同步等待 |
+
+### 变更（2026-09-30）
+
+- **file_convert 兼容层**：`/convert-office`、`/convert`、`/extract-text`、`/convert-to-images`、`/generate-excel`、`/cache/*`、`/mcp` 迁入本服务；须 Bearer + `X-Tenant-Id`；内部走引用 + worker。
 
 ### 变更（2026-08-21）
 

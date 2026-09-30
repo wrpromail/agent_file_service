@@ -151,6 +151,20 @@ API **lifespan** 启动时会探测当前配置会用到的外部服务，结果
 | `from_url_allowed_hosts` | _(空)_ | 逗号分隔 host 白名单；空 = 仅 SSRF 规则（禁私网/loopback） |
 | `layout_parser_version` | `0.2.0` | 与 markitdown/simple 多 block 版本对齐（缓存键） |
 
+### file_convert 兼容层
+
+路径 `/convert*`、`/extract-text`、`/generate-excel`、`/cache/*`、`/mcp`。须 Bearer + `X-Tenant-Id`。`POST /v1/files/from-url` 的 SSRF **不受下表影响**。
+
+| 字段 | 默认 | 说明 |
+|------|------|------|
+| `convert_compat_allow_private_urls` | `true` | 兼容层拉 `file_url` 是否允许私网（内网 MinIO） |
+| `convert_compat_timeout` | `300` | 同步转换 / Celery 等待超时（秒） |
+| `convert_compat_max_inline_bytes` | `20971520` | 响应内联 base64 上限；`0` = 不限制。超出只给 download URL |
+| `convert_compat_public_base_url` | _(空)_ | 拼 `pdf_url` / `file_urls` 的对外前缀；空则用请求的 `base_url` |
+| `convert_compat_session_id` | `convert-compat` | 兼容层入库引用使用的 `session_id` |
+
+环境变量名为字段大写（如 `CONVERT_COMPAT_ALLOW_PRIVATE_URLS`），可覆盖 yaml。
+
 ### 压缩包解压（zip / tar / tar.gz）
 
 完整说明见 **[archive-expand.md](./archive-expand.md)**。

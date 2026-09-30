@@ -11,7 +11,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from app.api.routes import auth_uc, files, sessions
+from app.api.routes import auth_uc, convert, files, sessions
 from app.bootstrap import ensure_runtime_dirs, ensure_schema
 from app.config import get_settings
 from app.core.dependency_health import (
@@ -54,6 +54,17 @@ async def lifespan(app: FastAPI):
         )
     settings = get_settings()
     ensure_runtime_dirs(settings)
+    mcp_cm = None
+    if not os.environ.get("PYTEST_VERSION"):
+        try:
+            from app.mcp_convert import mcp as mcp_server
+
+            if mcp_server is not None:
+                mcp_cm = mcp_server.session_manager.run()
+                await mcp_cm.__aenter__()
+        except Exception:
+            logger.exception("MCP convert session manager failed to start")
+            mcp_cm = None
     # pytest uses an in-memory engine via get_db; skip the process engine.
     if not os.environ.get("PYTEST_VERSION"):
         ensure_schema()
@@ -94,6 +105,11 @@ async def lifespan(app: FastAPI):
             )
         )
     yield
+    if mcp_cm is not None:
+        try:
+            await mcp_cm.__aexit__(None, None, None)
+        except Exception:
+            logger.debug("MCP convert session manager shutdown failed", exc_info=True)
     for task in tasks:
         task.cancel()
     for task in tasks:
@@ -109,6 +125,15 @@ def _route_group(path: str) -> str:
         return "v1_files"
     if path.startswith("/v1/sessions"):
         return "v1_sessions"
+    if (
+        path.startswith("/convert")
+        or path.startswith("/extract-text")
+        or path.startswith("/generate-excel")
+        or path.startswith("/cache")
+    ):
+        return "convert_compat"
+    if path.startswith("/mcp"):
+        return "mcp"
     if path.startswith("/api/auth"):
         return "auth"
     if path == "/health" or path.startswith("/health"):
@@ -160,9 +185,18 @@ app = FastAPI(
 )
 app.add_middleware(UcSessionMiddleware)
 app.add_middleware(HttpMetricsMiddleware)
+try:
+    from app.mcp_convert import ConvertMcpAuthMiddleware, mcp as mcp_server
+
+    app.add_middleware(ConvertMcpAuthMiddleware)
+    if mcp_server is not None:
+        app.mount("/mcp", mcp_server.streamable_http_app())
+except Exception:
+    logger.warning("MCP convert endpoint not mounted", exc_info=True)
 app.include_router(auth_uc.router)
 app.include_router(files.router)
 app.include_router(sessions.router)
+app.include_router(convert.router)
 
 
 @app.get("/metrics")

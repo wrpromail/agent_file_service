@@ -13,7 +13,7 @@
 | 层级 | 行为 |
 |------|------|
 | **保证线** | 上传即有元数据；默认后台准备 layout（Markdown，多 block） |
-| **能力菜单** | ocr / deep / custom-parse 等由 Agent 工具按需 `trigger` |
+| **能力菜单** | ocr / deep / custom-parse 等由 Agent 工具按需 `trigger`；旧 **file_convert** 路径（`/convert*`）已兼容迁入 |
 | **读路径** | `max_chars` / `outline` / `sheets` 裁剪；ETag 轮询；batch API |
 | **不做** | 业务解读、RAG、业务语义切分、主动回调 |
 
@@ -352,7 +352,7 @@ Office/表格依赖 LibreOffice（`soffice`）；纯 PDF 仅需 pypdfium2。
 
 ## 智能体集成
 
-智能体后端请用 Python SDK（协议封装 + `wait_for_content` 等待异步 layout），见 [sdk/python/README.md](./sdk/python/README.md)。REST 与 MCP 约定：[docs/agent-integration.md](./docs/agent-integration.md) · 联调手册：[AGENT_API.md](./AGENT_API.md)。
+智能体后端请用 Python SDK（协议封装 + `wait_for_content` 等待异步 layout），见 [sdk/python/README.md](./sdk/python/README.md)。REST 与 MCP 约定：[docs/agent-integration.md](./docs/agent-integration.md) · 联调手册：[AGENT_API.md](./AGENT_API.md)。从内网 file_convert 迁入：只改 Base URL 与鉴权头，见 [AGENT_API.md §5.8](./AGENT_API.md)。
 
 **进会话**（写入 Agent workspace）不在本服务内完成，两条路径：
 

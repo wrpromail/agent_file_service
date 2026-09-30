@@ -43,6 +43,8 @@ def test_repo_config_yaml_resolves():
     assert data.get("auto_parse_spreadsheet_also_tables") is True
     assert data.get("auto_parse_spreadsheet_tables_max_rows") == 5000
     assert data.get("auto_parse_spreadsheet_tables_max_cols") == 64
+    assert data.get("convert_compat_allow_private_urls") is True
+    assert data.get("convert_compat_timeout") == 300.0
 
 
 def test_settings_init_overrides_yaml(monkeypatch, tmp_path: Path):

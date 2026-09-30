@@ -17,6 +17,7 @@
 | 同步元数据 + 默认异步生成 **layout Markdown** | 「上传后后台跑满所有解析」 |
 | 按需 OCR / deep / tables / 自定义 prompt | 跨智能体权限判定（由你方编排层决策） |
 | 压缩包在限额内展开为多个子句柄 | 写你方 Agent 工作区、回调你方会话 |
+| 旧 file_convert 同步转换路径（`/convert*`，须鉴权） | 把兼容层当作唯一文件 API |
 
 ---
 
@@ -154,7 +155,7 @@ answer = agent.reason(markdown, user_task)
 
 ## 5. REST API 一览
 
-除特别说明外，均需 §1 鉴权头。路径前缀相对 `BASE_URL`。
+除特别说明外，均需 §1 鉴权头。路径前缀相对 `BASE_URL`。旧 file_convert 同步接口见 **§5.8**（`/convert*`，同样须鉴权）。
 
 ### 5.1 探活
 
@@ -386,6 +387,54 @@ curl -s -L -o out.bin \
   "$BASE/v1/files/$REF/download"
 ```
 
+### 5.8 file_convert 兼容层（旧转换服务迁入）
+
+从内网 `file_convert` 迁过来时，**路径与 JSON body 保持不变**，只改 Base URL 和鉴权头。新智能体主路径仍是 §3 的 `/v1/files`。
+
+```http
+POST $BASE/convert-office
+Authorization: Bearer <API_KEY>
+X-Tenant-Id: <TENANT_ID>
+Content-Type: application/json
+```
+
+| 方法 | 路径 | 能力 |
+|------|------|------|
+| POST | `/convert-office` | Office（doc/docx/ppt/pptx/xls/xlsx）→ Markdown |
+| POST | `/convert-doc` | 同上，强制 `file_format=doc` |
+| POST | `/extract-text` | 上列格式 + pdf → 纯文本（PDF 为 pypdf） |
+| POST | `/convert` | Markdown 字符串 → PDF |
+| POST | `/convert-to-images` | doc/docx/pdf → 分页 jpeg/png（zip 或逐页） |
+| POST | `/generate-excel` | JSON（`files[]` 或简化 `source[]`）→ xlsx |
+| GET | `/cache/stats` | 兼容层缓存统计 |
+| DELETE | `/cache/clear?days=30` | 只清兼容层标记的解析缓存 |
+| — | `/mcp` | 同名 5 个 MCP 工具；同样要带 Bearer + 租户 |
+
+HTTP 仍为**同步等到结果**。源文件与生成的 PDF/xlsx/zip 会入库为 `FileReference`；响应里多出来的 `reference_id` 可忽略。
+
+```bash
+# 旧：POST http://10.163.25.156:5008/convert-office
+# 新：只换地址和两行头，body 不动
+curl -s -X POST "$BASE/convert-office" \
+  -H "Authorization: Bearer $KEY" \
+  -H "X-Tenant-Id: $TENANT" \
+  -H "Content-Type: application/json" \
+  -d '{"file_url":"http://minio:9000/public/notice.doc","file_format":"doc"}' \
+  | jq '{message, cache_hit, processing_time, markdown_content:(.markdown_content[:80])}'
+
+curl -s -X POST "$BASE/convert" \
+  -H "Authorization: Bearer $KEY" \
+  -H "X-Tenant-Id: $TENANT" \
+  -H "Content-Type: application/json" \
+  -d '{"markdown_content":"# Hello\n\n表格测试"}' | jq '{task_id, pdf_url, has_b64:(.pdf_base64!=null)}'
+```
+
+**二次下载：** 旧 MinIO 预签名 URL 可无鉴权 GET。本服务的 `pdf_url` / `archive_url` / `file_urls` 指向 `/v1/files/{id}/download`，二次拉取须带同一组鉴权头。兼容层同时返回 `pdf_base64` / `archive_base64` / `file_base64`（与旧服务默认 memory 模式一致）；体积超过 `convert_compat_max_inline_bytes`（默认 20 MiB）时只给 URL。
+
+`GET /health` 仍是本服务的 `ok` / `degraded`（HTTP 200），不是旧服务的 `{"status":"healthy"}`。
+
+兼容层拉 `file_url` **允许内网地址**（对齐旧 convert-office 调 MinIO）；`POST /v1/files/from-url` 仍禁止私网。配置见 [docs/configuration.md](./docs/configuration.md)。
+
 ---
 
 ## 6. Excel / 表格：layout 与 tables
@@ -507,6 +556,22 @@ curl -s -X POST "$BASE/v1/files/$REF/parse" \
 ### 9.5 压缩包（可选）
 
 展开后 `archive.children | length >= 1`，且对每个 child 可走 §9.2。
+
+### 9.6 file_convert 兼容层（可选）
+
+```bash
+# 应 401
+curl -s -o /dev/null -w "%{http_code}\n" -X POST "$BASE/convert-office" \
+  -H "Content-Type: application/json" \
+  -d '{"file_url":"http://example.com/a.docx","file_format":"docx"}'
+
+curl -s -X POST "$BASE/convert" \
+  -H "Authorization: Bearer $KEY" -H "X-Tenant-Id: $TENANT" \
+  -H "Content-Type: application/json" \
+  -d '{"markdown_content":"# 兼容层"}' | jq '{task_id, pdf_url, has_b64:(.pdf_base64!=null)}'
+```
+
+详见 §5.8。
 
 ---
 

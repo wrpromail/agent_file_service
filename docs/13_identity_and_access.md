@@ -16,7 +16,7 @@ last_updated: "2026-08-20"
 
 | 层 | 载体 | 作用 |
 |----|------|------|
-| **服务门禁（L0）** | `Authorization: Bearer <API_KEYS>` + `X-Tenant-Id` | 机器 / Agent / 编排：`/v1/files*`、`/v1/sessions*`。**始终开启、不可关闭** |
+| **服务门禁（L0）** | `Authorization: Bearer <API_KEYS>` + `X-Tenant-Id` | 机器 / Agent / 编排：`/v1/files*`、`/v1/sessions*`、**`/convert*`**、**`/mcp`**。**始终开启、不可关闭** |
 | **终端用户（L2）** | 开闸后：`X-UC-Session`（本地 HMAC 票）+ `X-User-Id` | 人从工作台进来；浏览器**不把平台 JWT** 放进 `Authorization` |
 
 UC **不是** OAuth / OIDC / CAS。工作台新窗口打开本应用并附带 `?token=`（也认 `workbench_token`）。本系统只调 UC `GET /uc/api/login/token-auth` 验人，再签发本地票。

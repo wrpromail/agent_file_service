@@ -32,6 +32,7 @@ metadata = [
     "openpyxl",
     "xlrd",  # 旧版 .xls 元数据（sheet 数/维度）
     "pillow",
+    "mcp",  # /mcp file_convert 兼容（API 镜像）
 ]
 parsers = [
     "pypdf",
@@ -42,6 +43,8 @@ parsers = [
     "pillow",
     # 文件 → Markdown（xls/xlsx 需对应 extra；office/pdf 一并装上便于智能体通用消费）
     "markitdown[xls,xlsx,docx,pptx,pdf]",
+    "markdown",  # Markdown → HTML → PDF（LibreOffice）
+    "mcp",
 ]
 
 [build-system]

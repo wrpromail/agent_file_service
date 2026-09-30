@@ -15,6 +15,7 @@ celery_app = Celery(
         "app.tasks.parse_tasks",
         "app.tasks.gc_tasks",
         "app.tasks.custom_parse_tasks",
+        "app.tasks.convert_tasks",
     ],
 )
 

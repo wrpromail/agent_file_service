@@ -101,10 +101,12 @@ layout 完成后：
 
 ## 与 file_convert 迁移关系
 
-| file_convert | file service |
-|--------------|--------------|
-| `POST /convert-office` + `file_url` | 上传/import → layout（内含 legacy 转换） |
-| 返回 `markdown_content` | `GET .../content?profile=layout` |
-| 自建 hash 缓存 markdown | parse_results + 可选 derivatives OOXML |
+`POST /convert-office` 等兼容路径**已挂在本服务**（须 Bearer + `X-Tenant-Id`）。调用方只改 Base URL 与鉴权头；JSON 与同步语义对齐旧服务。内部仍走本节的 LibreOffice → OOXML → layout，缓存为 `parse_results`。
 
-读路径迁移时，应依赖本能力而非长期旁路 convert 服务。
+| 旧 file_convert | 本服务 |
+|-----------------|--------|
+| `POST /convert-office` + `file_url` | **同一路径**（兼容层）→ 入库 + layout；也可 `POST /v1/files` 后 `GET .../content?profile=layout` |
+| 返回 `markdown_content` | 兼容层响应字段不变；原生路径读 `metadata.markdown` |
+| 自建 SQLite `file_cache` | `parse_results` + 可选 derivatives OOXML |
+
+新 Agent 用 `/v1/files` 保证线。迁完调用方后可下线内网 file_convert 进程。联调说明见 [AGENT_API.md §5.8](../AGENT_API.md)。

@@ -16,7 +16,7 @@
 | **[13_identity_and_access.md](./13_identity_and_access.md)** | **UC 工作台跳转鉴权**（`?token=` → 本地 `X-UC-Session`；非 OAuth） |
 | [implementation-status.md](./implementation-status.md) | **实现状态看板**（模块完成度、测试、变更日志） |
 | [implementation-plan.md](./implementation-plan.md) | 历史里程碑索引（已归档，不再维护任务表） |
-| [legacy-office.md](./legacy-office.md) | 旧式 doc/ppt/xls → LibreOffice → OOXML |
+| [legacy-office.md](./legacy-office.md) | 旧式 doc/ppt/xls → LibreOffice → OOXML；file_convert 兼容层已迁入本服务 |
 | **[archive-expand.md](./archive-expand.md)** | **压缩包上传即解压**（zip/tar、密码、children 句柄、样例） |
 
 总设计：[../design.md](../design.md) · 仓库入口：[../README.md](../README.md) · 样例：[../sample/README.md](../sample/README.md)
@@ -47,6 +47,10 @@
 10. **能力**：`profile=ocr` 正式 API；**PATCH** 引用；**batch-status / batch-content**；**from-url**（SSRF）；**archive/members**。  
 11. **运维 / 安全**：`API_KEY_TENANT_MAP` + audit；租户配额 429；`GET /metrics`。  
 12. **媒体 L0**：音视频 duration 等元数据；图片默认 layout=视觉模型（与 product-principles 一致）。
+
+### 2026-09-30
+
+17. **file_convert 兼容层**：`/convert-office`、`/convert`、`/extract-text`、`/convert-to-images`、`/generate-excel`、`/mcp` 挂在本进程；须 Bearer + `X-Tenant-Id`。调用方改地址与鉴权头。联调见 [AGENT_API.md §5.8](../AGENT_API.md)。
 
 ### 2026-08-20
 

@@ -211,6 +211,16 @@ class Settings(BaseSettings):
     # 逗号分隔 host 白名单；空 = 仅 SSRF 规则（禁私网）
     from_url_allowed_hosts: str = ""
 
+    # file_convert 兼容层（/convert*）。from-url 的 SSRF 规则不变。
+    # 兼容层拉 file_url 时默认允许内网（旧 convert-office 调 MinIO 私网地址）。
+    convert_compat_allow_private_urls: bool = True
+    convert_compat_timeout: float = 300.0
+    # 响应内联 base64 上限（字节）；0 = 不限制。超出则只给 download URL。
+    convert_compat_max_inline_bytes: int = 20 * 1024 * 1024
+    # 空 = 用请求的 base_url 拼 pdf_url / archive_url
+    convert_compat_public_base_url: str = ""
+    convert_compat_session_id: str = "convert-compat"
+
     parse_sync: bool = False
     # 异步任务后端：local = 进程内 BackgroundTasks（本机单进程 dev）；
     # celery = 投递到 worker 容器（Docker 默认）。parse_sync=true 时忽略此项。

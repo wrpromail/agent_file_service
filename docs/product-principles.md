@@ -186,6 +186,7 @@ get_file_status → layout ready?
 | 取深度结果 | `content?profile=deep` | 需先完成 deep |
 | 原始文件 | `GET .../download` · `download_file` | 少数场景 |
 | 列表 / clone | `GET /files` · `POST .../clone` | 编排层共享 |
+| **file_convert 兼容** | `/convert-office` · `/convert` · `/extract-text` · `/convert-to-images` · `/generate-excel` · `/mcp` | 旧转换服务同步 JSON；须鉴权。新 Agent 仍走本表上行路径 |
 
 **智能模式（读路径）**：保证线交付的 Markdown 应对齐「事实完整、噪音最小」。Excel 默认空白 sheet 等无信息量段落在 `smart_mode=true`（默认）下不进入 Agent 上下文；需要引擎全量输出时显式 `smart_mode=false`。过滤发生在 content 读路径，不改写解析缓存，也不属于业务解读。
 

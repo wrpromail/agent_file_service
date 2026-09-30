@@ -181,6 +181,10 @@ X-Tenant-Id: <tenant>
 | `ALLOWED_TENANT_IDS` | 可选。配置后仅列表内 `X-Tenant-Id`（及 clone 的 `target_tenant_id`）合法；未配置则调用方自报 |
 | `API_KEY_TENANT_MAP` | 可选。`key1:tenant-a\|tenant-b,key2:*`；绑定 key 可用租户 |
 
+### file_convert 兼容路径
+
+旧转换服务的同步接口已挂在本进程：`/convert-office`、`/convert`、`/extract-text`、`/convert-to-images`、`/generate-excel`、`/mcp`。调用方改 Base URL，并加上本节的 Bearer + `X-Tenant-Id`。智能体识别主路径仍是 `upload` → `content?profile=layout`。契约与 curl 见 [AGENT_API.md §5.8](../AGENT_API.md)。
+
 ### Content 裁剪（Agent 主路径）
 
 `GET /v1/files/{id}/content` 查询参数（读路径，**不改写** parse 缓存）：
@@ -253,9 +257,11 @@ md = fs.wait_for_content(ref).markdown
 
 安装与方法面：[sdk/python/README.md](../sdk/python/README.md)。
 
-## MCP 封装（可选）
+## MCP
 
-本仓只提供 REST。调用方用 SDK 把同一组能力封成 MCP 工具，例如：
+**file_convert 兼容**：本服务挂载 `/mcp`（Streamable HTTP），工具名对齐旧转换服务（`convert_office_to_markdown`、`convert_markdown_to_pdf`、`extract_file_text`、`convert_document_to_images`、`generate_excel`）。须 Bearer + `X-Tenant-Id`。见 [AGENT_API.md §5.8](../AGENT_API.md)。
+
+**文件中台主路径**（upload / status / content / parse）不在本仓跑 MCP server。调用方用 SDK 封装，例如：
 
 | MCP 工具 | 对应 REST |
 |----------|-----------|

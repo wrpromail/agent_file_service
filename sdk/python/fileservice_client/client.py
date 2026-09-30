@@ -526,6 +526,63 @@ class FileServiceClient:
         resp = self._request("POST", "/v1/files/batch-content", json=body)
         return safe_json(resp)
 
+    def convert_office(self, file_url: str, file_format: str) -> dict[str, Any]:
+        """file_convert 兼容：Office → Markdown。"""
+        resp = self._request(
+            "POST",
+            "/convert-office",
+            json={"file_url": file_url, "file_format": file_format},
+        )
+        return safe_json(resp)
+
+    def convert_markdown(self, markdown_content: str) -> dict[str, Any]:
+        """file_convert 兼容：Markdown → PDF。"""
+        resp = self._request("POST", "/convert", json={"markdown_content": markdown_content})
+        return safe_json(resp)
+
+    def extract_text(self, file_url: str, file_format: str) -> dict[str, Any]:
+        """file_convert 兼容：抽取纯文本。"""
+        resp = self._request(
+            "POST",
+            "/extract-text",
+            json={"file_url": file_url, "file_format": file_format},
+        )
+        return safe_json(resp)
+
+    def convert_to_images(
+        self,
+        file_url: str,
+        file_format: str,
+        *,
+        image_format: str = "jpeg",
+        quality: int = 80,
+        max_width: int = 1800,
+        dpi: int = 220,
+        delivery_mode: str = "storage",
+        pack_mode: str = "zip",
+    ) -> dict[str, Any]:
+        """file_convert 兼容：文档 → 页图。"""
+        resp = self._request(
+            "POST",
+            "/convert-to-images",
+            json={
+                "file_url": file_url,
+                "file_format": file_format,
+                "image_format": image_format,
+                "quality": quality,
+                "max_width": max_width,
+                "dpi": dpi,
+                "delivery_mode": delivery_mode,
+                "pack_mode": pack_mode,
+            },
+        )
+        return safe_json(resp)
+
+    def generate_excel(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """file_convert 兼容：JSON → xlsx。payload 为 files[] 或 source[]。"""
+        resp = self._request("POST", "/generate-excel", json=payload)
+        return safe_json(resp)
+
 
 def init(
     base_url: str | None = None,
